@@ -9,15 +9,16 @@ import Vapor
 import Fluent
 import MongoKitten
 import AddaSharedModels
+import NIOConcurrencyHelpers
 
 class WebSocketController {
-    let lock: Lock
+    let lock: NIOLock
     let db: Database
     let logger: Logger
     var chatClients: WebsocketClients
     
     init(eventLoop: EventLoop, db: Database) {
-        self.lock = Lock()
+        self.lock = NIOLock()
         self.db = db
         self.logger = Logger(label: "WebSocketController")
         self.chatClients = WebsocketClients(eventLoop: eventLoop)
@@ -52,21 +53,13 @@ class WebSocketController {
             
             // from client to server
             case .connect(let user):
-                guard let userID = user.id else {
-                    print(#line, "User id is missing")
-                    return
-                }
-                print(#line, user)
+                let userID = user.id
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.add(client)
             
             // from client to server
             case .disconnect(let user):
-                guard let userID = user.id else {
-                    print(#line, "User id is missing")
-                    return
-                }
-                print(#line, user)
+                let userID = user.id 
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.remove(client)
 
@@ -85,13 +78,10 @@ class WebSocketController {
                 
             case .error(let error):
                 print(#line, error)
-                logger.error("\(error)")
+                logger.error("(error)")
             case .none:
                 print(#line, "decode error")
-            
-                
             }
-            
         }
     }
 }

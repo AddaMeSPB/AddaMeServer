@@ -28,13 +28,13 @@ final class ChatClient: WebSocketClient, Hashable {
         socket.send(text)
     }
     
-    func send(_ message: Message, _ req: Request) {
+    func send(_ message: MessageModel, _ req: Request) {
         guard req.loggedIn != false else {
             logger.error("\(#line) Unauthorized send message")
             return
         }
 
-        Message.query(on: req.db)
+        MessageModel.query(on: req.db)
             .with(\.$sender) { $0.with(\.$attachments) }
             .with(\.$recipient) { $0.with(\.$attachments) }
             .filter(\.$id == message.id!)

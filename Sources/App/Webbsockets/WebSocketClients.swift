@@ -8,10 +8,11 @@
 import Vapor
 import MongoKitten
 import AddaSharedModels
+import NIOConcurrencyHelpers
 
 final class WebsocketClients {
     
-    let lock: Lock
+    let lock: NIOLock
     var eventLoop: EventLoop
     var allCliendts: [ObjectId: WebSocketClient]
     let logger: Logger
@@ -26,7 +27,7 @@ final class WebsocketClients {
         self.eventLoop = eventLoop
         self.allCliendts = clients
         self.logger = Logger(label: "WebsocketClients")
-        self.lock = Lock()
+        self.lock = NIOLock()
     }
     
     func add(_ client: WebSocketClient) {
@@ -47,7 +48,7 @@ final class WebsocketClients {
         }
     }
     
-  fileprivate func sendNotificationToConversationMembers(_ msg: Message, _ req: Request) -> EventLoopFuture<()> {
+  fileprivate func sendNotificationToConversationMembers(_ msg: MessageModel, _ req: Request) -> EventLoopFuture<()> {
     return msg.$conversation.query(on: req.db)
       .with(\.$members) {
         $0.with(\.$devices) {
@@ -57,7 +58,7 @@ final class WebsocketClients {
       .first()
       .unwrap(or: Abort(.noContent) )
       .map { conversation in
-      for user in conversation.members where user.id != req.payload.userId {
+          for user in conversation.members where user.id != req.payload.user.id {
           for device in user.devices {
           req.apns.send(
             .init(title: conversation.title, subtitle: msg.messageBody),
@@ -70,7 +71,7 @@ final class WebsocketClients {
   
   func send(_ msg: MessageItem, req: Request) {
         
-        let messageCreate = Message(msg, senderId: req.payload.userId, receipientId: nil)
+      let messageCreate = MessageModel(msg, senderId: req.payload.user.id, receipientId: nil)
         
         req.db.withConnection { _ in
             messageCreate.save(on: req.db)
@@ -89,7 +90,7 @@ final class WebsocketClients {
             }
             
             messageCreate.isDelivered = success
-            messageCreate.update(on: req.db)
+            _ = messageCreate.update(on: req.db)
             
             let chatClients = self.activeClients.compactMap { $0 as? ChatClient }
             
@@ -97,7 +98,7 @@ final class WebsocketClients {
                 client.send(messageCreate, req)
             }
           
-           sendNotificationToConversationMembers(messageCreate, req)
+           _ = sendNotificationToConversationMembers(messageCreate, req)
         }
         
     }

@@ -3,7 +3,7 @@ version: '3.9'
 x-shared_environment: &shared_environment
   LOG_LEVEL: ${LOG_LEVEL:-debug}
   JWTS: "${JWTS}"
-  MONGO_DB_PRO: "${MONGO_DB_PRO}"
+  MONGO_DB_PRODUCTION_URL: '${MONGO_DB_PRODUCTION_URL}'
   TWILIO_ACCOUNT_ID: "${TWILIO_ACCOUNT_ID}"
   TWILIO_ACCOUNT_SECRET: "${TWILIO_ACCOUNT_SECRET}"
   SENDER_NUMBER: "+16097579519"
@@ -12,19 +12,27 @@ x-shared_environment: &shared_environment
   APNS_TEAM_ID: "${APNS_TEAM_ID}"
   APNS_TOPIC: "com.addame.AddaMeIOS"
 
+  REDIS_URL_PRODUCTION: '${REDIS_URL_PRODUCTION}'
 
 services:
-  mongo:
-    image: mongo:5.0.3
-    container_name: addame_mongodb
-    volumes:
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - ./mongodb/data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: addame_api_pro
-    networks:
-      - production_gateway
-    restart: unless-stopped
+    mongo:
+     image: mongo:latest
+     container_name: AddameProduction
+     environment:
+       - AUTH=yes
+       - MONGODB_ADMIN_USER='${MONGODB_ADMIN_USER}'
+       - MONGODB_ADMIN_PASS='${MONGODB_ADMIN_PASS}'
+       - MONGO_INITDB_ROOT_USERNAME='${MONGODB_USER_PRODUCTION}'
+       - MONGO_INITDB_ROOT_PASSWORD='${MONGODB_PASS_PRODUCTION}'
+       - MONGO_INITDB_DATABASE='${MONGODB_DATABASE_PRODUCTION}'
+     volumes:
+       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+       - ./mongodb/data:/data/db
+     networks:
+       - production_gateway
+     restart: unless-stopped
+     ports:
+      - "27018:27017"
 
   addame_server:
     image: addamespb/addame_server:latest
@@ -45,10 +53,22 @@ services:
       - production_gateway
     restart: unless-stopped
 
+  redis:
+    container_name: redisProAddame
+    image: 'bitnami/redis:5.0'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    restart: unless-stopped
+    volumes:
+      - redis-persistence-production:/bitnami/redis/data
+    networks:
+      - production_gateway
+
 volumes:
   addameServer:
+  redis-persistence-production:
 
 networks:
   production_gateway:
     name: Default
-

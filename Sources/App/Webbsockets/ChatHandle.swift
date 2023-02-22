@@ -48,23 +48,17 @@ class ChatHandle {
             
             switch chatOutGoingEvent {
             case .connect(let user):
-                guard let userID = user.id else {
-                    print(#line, "User id is missing")
-                    return
-                }
-                print(#line, user)
+                let userID = user.id 
+
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.add(client)
             case .disconnect(let user):
-                guard let userID = user.id else {
-                    print(#line, "User id is missing")
-                    return
-                }
-                print(#line, user)
+                 let userID = user.id
+
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.remove(client)
             case .message(let msg):
-                print(#line, msg)
+
                 chatClients.send(msg, req: req)
                 
             case .conversation(let lastMessage):

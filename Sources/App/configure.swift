@@ -2,8 +2,6 @@ import Vapor
 import Leaf
 import VaporRouting
 import AddaSharedModels
-import AddaMeRouteHandlers
-import AppExtensions
 
 // configures your application
 public func configure(_ app: Application) async throws {
@@ -35,8 +33,6 @@ public func configure(_ app: Application) async throws {
         break
     }
 
-    app.twilio.configuration = .environment
-
     app.middleware.use(JWTMiddleware())
     
     app.setupDatabaseConnections(&connectionString)
@@ -53,13 +49,24 @@ public func configure(_ app: Application) async throws {
 
     //  app.logger.logLevel = .trace
 
-    // Encoder & Decoder
+    // MARK: Encoder & Decoder
     let encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .iso8601
     ContentConfiguration.global.use(encoder: encoder, for: .json)
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601
     ContentConfiguration.global.use(decoder: decoder, for: .json)
+
+    // MARK: Mailgun
+    app.mailgun.configuration = .environment
+    app.mailgun.defaultDomain = .productoin
+
+    // MARK: Queues
+    try queues(app)
+
+    // MARK: Services
+    app.randomGenerators.use(.random)
+    app.repositories.use(.database)
 
     let host = "0.0.0.0"
     var port = 6060
@@ -83,7 +90,6 @@ public func configure(_ app: Application) async throws {
         app.http.server.configuration.hostname = "0.0.0.0"
         port = 8080
     }
-    
     
     try routes(app)
     let baseURL = "http://\(host):\(port)"

@@ -1,15 +1,32 @@
 @testable import App
 import XCTVapor
+import AddaSharedModels
 
-final class AppTests: XCTestCase {
-    func testHelloWorld() async throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+class AppTests: XCTestCase {
+    var app: Application!
+    public var token = ""
+
+    func createTestApp() async throws -> Application {
+        app = Application(.testing)
         try await configure(app)
-
-        try app.test(.GET, "hello", afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Hello, world!")
-        })
+        app.databases.reinitialize()
+        return app
     }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        try await app!.autoRevert().get()
+        try await app!.autoMigrate().get()
+
+    }
+
+//    func getAccessToken() async throws -> UserModel {
+//
+//        let user = try await UserModel.create(phoneNumber: "+79218821211", database: app.db)
+//
+//        let userPayload = try Payload(with: user)
+//        let accessToken = try app.jwt.signers.sign(userPayload)
+//        token = accessToken
+//        return user
+//    }
 }
