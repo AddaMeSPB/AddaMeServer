@@ -12,16 +12,21 @@ public func eventsHandler(
     case .create(let createEvent):
         if request.loggedIn == false { throw Abort(.unauthorized) }
         
-        let content = createEvent
+        var content = createEvent
         guard let ownerID = request.payload.user.id else {
             throw Abort(.notFound, reason: "UserID not found!")
         }
         
         let conversation = ConversationModel(title: content.name, type: .group)
         try await conversation.save(on: request.db)
-        
-        guard let owner = try await request.users.find(id: ownerID) else {
-            throw Abort(.notFound, reason: "Cant find member or admin by userID \(ownerID)")
+
+        guard let owner = try await UserModel.query(on: request.db)
+            .filter(\.$id == ownerID)
+            .with(\.$attachments)
+            .first()
+            .get()
+        else {
+            throw Abort(.notFound, reason: "User not found by id: \(ownerID)")
         }
         
         try await conversation.$admins.attach(owner, method: .ifNotExists, on: request.db)
@@ -35,8 +40,14 @@ public func eventsHandler(
         }
         
         let categoriesID = content.categoriesId
+        content.imageUrl = owner.attachments.last?.imageUrlString
         
-        let data = HangoutEventModel(content: content, ownerID: ownerID, conversationsID: conversationsID, categoriesID: categoriesID)
+        let data = HangoutEventModel(
+            content: content,
+            ownerID: ownerID,
+            conversationsID: conversationsID,
+            categoriesID: categoriesID
+        )
         try await data.save(on: request.db)
         return data.response.recreateEventWithSwapCoordinatesForMongoDB
         
