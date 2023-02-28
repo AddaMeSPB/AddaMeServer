@@ -33,7 +33,7 @@ class ChatHandle {
         
         ws.onText { [self] ws, text in
             guard let data = text.data(using: .utf8) else {
-                print(#line, "Wrong encoding for received message")
+                req.logger.notice("Wrong encoding for received message for connect web socket")
                 return
             }
             
@@ -42,21 +42,23 @@ class ChatHandle {
             
             guard let chatOutGoingEvent = ChatOutGoingEvent.decode(data: data) else {
                 ws.close(code: .unacceptableData)
+                req.logger.notice("unacceptableData for connect web socket")
                 return
             }
-            
-            
+
             switch chatOutGoingEvent {
             case .connect(let user):
                 let userID = user.id 
 
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.add(client)
+                req.logger.info("web socker connect for user \(user.email ?? user.fullName)")
             case .disconnect(let user):
                  let userID = user.id
 
                 let client = ChatClient(id: userID, socket: ws)
                 chatClients.remove(client)
+                req.logger.info("web socker remove for user \(user.email ?? user.fullName)")
             case .message(let msg):
 
                 chatClients.send(msg, req: req)
@@ -70,11 +72,6 @@ class ChatHandle {
             case .error(let error):
                 print(#line, error)
             }
-            
-            //            } catch {
-            //                print(#line, error.localizedDescription)
-            //            }
-            
         }
     }
     
