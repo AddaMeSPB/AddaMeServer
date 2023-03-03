@@ -14,7 +14,7 @@
                                     <li class="nav-item"> <a class="nav-link active" href="#home">HOME <span class="sr-only">(current)</span></a> </li>
                                     <li class="nav-item"> <a class="nav-link" href="#features">FEATURES</a> </li>
                                     <li class="nav-item"> <a class="nav-link" href="#contact">CONTACT</a> </li>
-                                    <li class="nav-item"><a href="https://itunes.apple.com/us/app/addaa/id1398824560?mt=8" target="_blank" class="btn btn-outline-light my-3 my-sm-0 ml-lg-3">Download</a></li>
+                                    <li class="nav-item"><a href="https://apps.apple.com/us/app/walk-nearby-neighbours-friends/id1538487173" target="_blank" class="btn btn-outline-light my-3 my-sm-0 ml-lg-3">Download</a></li>
                                 </ul>
                             </div>
                         </nav>
@@ -255,7 +255,7 @@
                     <p class="tagline">Our app is available on any mobile device! Download now to get started!</p>
                     <div class="my-4">
                         
-                        <a href="https://itunes.apple.com/us/app/addaa/id1398824560?mt=8" target="_blank" class="btn btn-light"><img src="images/appleicon.png" alt="icon"> App Store</a>
+                        <a href="https://apps.apple.com/us/app/walk-nearby-neighbours-friends/id1538487173" target="_blank" class="btn btn-light"><img src="images/appleicon.png" alt="icon"> App Store</a>
                         <a href="#" class="btn btn-light"><img src="images/playicon.png" alt="icon"> Google play</a>
                     </div>
                     <p class="text-primary"><small><i>*Works on iOS 10.0.5+, Android Kitkat and above. </i></small></p>
