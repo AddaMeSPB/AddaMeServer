@@ -289,16 +289,20 @@ public func userHandler(
             .get()
             
         return user.response
+
     case let .devices(devicesRoute):
         return try await devicesHandler(request: request, route: devicesRoute)
+
     case let .attachments(attachmentsRoute):
         return try await attachmentsHandler(request: request, route: attachmentsRoute)
+
     case let .conversations(conversationsRoute):
         return try await conversationsHandler(
             request: request,
             usersId: usersId,
             route: conversationsRoute
         )
+
     case .events(_):
         return Response(status: .badRequest)
     }

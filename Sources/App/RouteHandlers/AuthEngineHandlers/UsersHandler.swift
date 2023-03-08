@@ -13,6 +13,7 @@ public func usersHandler(
     switch route {
     case .user(id: let id, route: let userRoute):
         return try await userHandler(request: request, usersId: id, route: userRoute)
+
     case .update(input: let input):
         if request.loggedIn == false { throw Abort(.unauthorized) }
         guard let currentUserID = request.payload.user.id else {

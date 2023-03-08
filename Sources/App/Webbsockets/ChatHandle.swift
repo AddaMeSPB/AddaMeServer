@@ -10,13 +10,14 @@ import Foundation
 import MongoKitten
 import AddaSharedModels
 
-class ChatHandle {
-    var chatClients: WebsocketClients
-    
-    init(eventLoop: EventLoop) {
-        self.chatClients = WebsocketClients(eventLoop: eventLoop)
+actor WebsocketHandle {
+
+    private var wsClients: WebsocketClients
+
+    init(wsClients: WebsocketClients) {
+        self.wsClients = wsClients
     }
-    
+
     func connectionHandler(ws: WebSocket, req: Request) {
         
         ws.onPong { ws in
@@ -25,11 +26,11 @@ class ChatHandle {
             }
         }
         
-        ws.onPong { ws in
-            ws.onText { (ws, text) in
-                print(#line, text)
-            }
-        }
+//        ws.onPing { ws in
+//            ws.onText { (ws, text) in
+//                print(#line, text)
+//            }
+//        }
         
         ws.onText { [self] ws, text in
             guard let data = text.data(using: .utf8) else {
@@ -41,36 +42,45 @@ class ChatHandle {
             print(#line, string as Any)
             
             guard let chatOutGoingEvent = ChatOutGoingEvent.decode(data: data) else {
-                ws.close(code: .unacceptableData)
+
                 req.logger.notice("unacceptableData for connect web socket")
+                Task {
+                  try await ws.close(code: .unacceptableData)
+                }
                 return
             }
 
             switch chatOutGoingEvent {
             case .connect(let user):
-                let userID = user.id 
-
-                let client = ChatClient(id: userID, socket: ws)
-                chatClients.add(client)
-                req.logger.info("web socker connect for user \(user.email ?? user.fullName)")
+                let userID = user.id
+                Task {
+                    await wsClients.join(id: userID, on: ws)
+                }
+                req.logger.info("web socker connect for user \(user.email ?? user.fullName ?? "")")
             case .disconnect(let user):
                  let userID = user.id
 
-                let client = ChatClient(id: userID, socket: ws)
-                chatClients.remove(client)
-                req.logger.info("web socker remove for user \(user.email ?? user.fullName)")
+                Task {
+                    await wsClients.leave(id: userID)
+                }
+                req.logger.info("web socker remove for user \(user.email ?? user.fullName ?? "")")
             case .message(let msg):
 
-                chatClients.send(msg, req: req)
-                
+                Task {
+                    try await wsClients.send(msg: msg, req: req)
+                }
+
             case .conversation(let lastMessage):
-                print(#line, lastMessage)
-                chatClients.send(lastMessage, req: req)
-                
+
+                Task {
+                    try await wsClients.send(msg: lastMessage, req: req)
+                }
+
+                req.logger.info("conversation conversation: \(lastMessage)")
             case .notice(let msg):
                 print(#line, msg)
             case .error(let error):
-                print(#line, error)
+                req.logger.info("error: \(error.localizedDescription)")
             }
         }
     }

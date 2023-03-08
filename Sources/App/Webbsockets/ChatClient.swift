@@ -11,51 +11,115 @@ import Fluent
 import AddaSharedModels
 import APNS
 
-final class ChatClient: WebSocketClient, Hashable {
+actor WebsocketClients {
+    private var allSockets: [ObjectId: WebSocket] = [:]
+    private let logger = Logger(label: "WebsocketClients")
 
-    let logger: Logger = Logger(label: "ChatClient")
-    
-    override init(id: ObjectId, socket: WebSocket) {
-        super.init(id: id, socket: socket)
+    func activeSockets(senderId: ObjectId) -> [WebSocket] {
+        let allExceptSender = allSockets.filter { $0.key != senderId }
+        return allExceptSender.values.filter { !$0.isClosed }
     }
 
-    func send(_ event: ChatOutGoingEvent) {
-        guard let text = event.jsonString else {
-            logger.error("Error occer when convert ChatOutGoingEvent to jsonString")
-            return
+    func join(id: ObjectId, on ws: WebSocket) {
+        self.allSockets[id] = ws
+    }
+
+    func find(id: ObjectId) -> WebSocket? {
+        return self.allSockets[id]
+    }
+
+    func leave(id: ObjectId) {
+        self.allSockets.removeValue(forKey: id)
+    }
+
+    func send(msg: MessageItem, req: Request) async throws {
+        guard let senderID = req.payload.user.id else {
+            throw Abort(.notFound, reason: "current User missing from payload")
         }
 
-        socket.send(text)
+        let messageCreate = MessageModel(msg, senderId: senderID, receipientId: nil)
+
+        do {
+            try await messageCreate.save(on: req.db)
+
+            for socket in activeSockets(senderId: senderID) {
+                try await send(message: messageCreate, req: req, socket: socket)
+            }
+
+            try await sendNotificationToConversationMembers(
+                msgItem: msg,
+                senderID: senderID,
+                with: req
+            )
+
+        } catch {
+            messageCreate.isDelivered = false
+        }
+
     }
-    
-    func send(_ message: MessageModel, _ req: Request) {
-        guard req.loggedIn != false else {
+
+    @Sendable func send(message: MessageModel, req: Request, socket: WebSocket) async throws {
+        if !req.loggedIn {
             logger.error("\(#line) Unauthorized send message")
-            return
+            throw Abort(.unauthorized)
         }
 
-        MessageModel.query(on: req.db)
+        try await MessageModel.query(on: req.db)
             .with(\.$sender) { $0.with(\.$attachments) }
             .with(\.$recipient) { $0.with(\.$attachments) }
             .filter(\.$id == message.id!)
             .first()
-            .unwrap(or: Abort(.notFound, reason: "No Message found! by id: \(id)"))
+            .unwrap(or: Abort(.notFound, reason: "No Message found! by id: \(message.id?.hexString ?? "")"))
             .map { original in
                 let message = ChatOutGoingEvent.message(original.response).jsonString
                 let lastMessage = ChatOutGoingEvent.conversation(original.response).jsonString
 
-                self.socket.send(message ?? "")
-                self.socket.send(lastMessage ?? "")
-              
+                socket.send(message ?? "")
+                socket.send(lastMessage ?? "")
             }
-      
+            .get()
     }
 
-    static func == (lhs: ChatClient, rhs: ChatClient) -> Bool {
-        return lhs.id == rhs.id
-    }
+    @Sendable private func sendNotificationToConversationMembers(
+        msgItem: MessageItem,
+        senderID: ObjectId,
+        with req: Request
+    )  async throws {
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+        guard let conversation = try await ConversationModel.query(on: req.db)
+            .with(\.$members)
+            .filter(\.$id == msgItem.conversationId)
+            .first()
+            .get()
+
+        else {
+            throw Abort(.notFound, reason: "No Conversation found! by ID \(msgItem.conversationId.hexString)")
+        }
+
+        for member in conversation.members where member.id != senderID {
+
+            guard let memberID = member.id else {
+                throw Abort(.notFound, reason: "current User missing from payload")
+            }
+
+            guard let device = try await DeviceModel.query(on: req.db)
+                .filter(\.$user.$id == memberID)
+                .first()
+                .get()
+
+            else {
+                throw Abort(.notFound, reason: "User not found from \(#function)")
+            }
+
+            try await req.apns.send(
+                .init(
+                    title: conversation.title,
+                    subtitle: msgItem.messageBody
+                ),
+                to: device.token
+            ).get()
+
+        }
+      }
+
 }

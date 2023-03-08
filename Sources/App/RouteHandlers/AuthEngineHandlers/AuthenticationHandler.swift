@@ -178,6 +178,7 @@ private func emailVerificationResponseForValidUser(
             let refreshToken = try req.application.jwt.signers.sign(refreshPayload)
 
             let access = RefreshTokenResponse(accessToken: accessToken, refreshToken: refreshToken)
+            req.payload = userPayload
 
             try await VerificationCodeAttempt.query(on: req.db)
                 .filter(\.$id == input.attemptId)

@@ -11,17 +11,18 @@ import MongoKitten
 import JWT
 import AddaSharedModels
 
-extension ChatController: RouteCollection {
+extension WebsocketController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         routes.webSocket(onUpgrade: self.webSocket)
     }
 }
 
-struct ChatController {
-    let wsController: WebSocketController
-    
-    func webSocket(_ req: Request, socket: WebSocket) {
-        self.wsController.connect(socket, req: req)
+struct WebsocketController {
+    let wsController: WebsocketHandle
+
+    func webSocket(_ req: Request, ws: WebSocket) {
+        Task {
+            await self.wsController.connectionHandler(ws: ws, req: req)
+        }
     }
-    
 }
