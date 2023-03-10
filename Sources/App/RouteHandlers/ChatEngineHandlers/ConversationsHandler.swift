@@ -38,11 +38,9 @@ public func conversationsHandler(
                 throw Abort(.notFound, reason: "Cant find member user by phoneNumber: \(content.opponentPhoneNumber) or current user and member user cant be same")
             }
         
-        guard let opponentUserId = opponentUser.id
-            else {
-                throw Abort(.notFound, reason: "Cant find opponentUserId")
-            }
-        debugPrint("opponentUserId \(opponentUserId)")
+        guard let opponentUserId = opponentUser.id else {
+            throw Abort(.notFound, reason: "Cant find opponentUserId")
+        }
         
         let userConversation = try await UserConversationModel.query(on: request.db)
                 .filter(\.$member.$id == currentUserID)

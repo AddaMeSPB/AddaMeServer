@@ -23,7 +23,7 @@ public func devicesHandler(
         var currentUserID: ObjectId? = nil
         var newInput = DeviceInOutPut.init(
             name: input.name,
-            token: input.token,
+            pushToken: input.pushToken,
             voipToken: input.voipToken
         )
 
@@ -45,13 +45,13 @@ public func devicesHandler(
             name: newInput.name,
             model: newInput.model,
             osVersion: newInput.osVersion,
-            token: newInput.token,
+            pushToken: newInput.pushToken,
             voipToken: newInput.voipToken,
             userId: currentUserID
         )
 
         guard let device = try await DeviceModel.query(on: request.db)
-            .filter(\.$token == input.token)
+            .filter(\.$pushToken == input.pushToken)
             .first()
             .get()
 

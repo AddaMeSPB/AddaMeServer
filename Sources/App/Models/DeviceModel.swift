@@ -17,7 +17,7 @@ public final class DeviceModel: Model {
         name: String,
         model: String? = nil,
         osVersion: String? = nil,
-        token: String,
+        pushToken: String,
         voipToken: String,
         userId: UserModel.IDValue? = nil
     ) {
@@ -26,7 +26,7 @@ public final class DeviceModel: Model {
         self.name = name
         self.model = model
         self.osVersion = osVersion
-        self.token = token
+        self.pushToken = pushToken
         self.voipToken = voipToken
         self.$user.id = userId
     }
@@ -37,7 +37,7 @@ public final class DeviceModel: Model {
     @Field(key: "name") public var name: String
     @OptionalField(key: "model") public var model: String?
     @OptionalField(key: "osVersion") public var osVersion: String?
-    @Field(key: "token") public var token: String
+    @Field(key: "pushToken") public var pushToken: String
     @Field(key: "voipToken") public var voipToken: String
 
     @OptionalParent(key: "ownerId") public var user: UserModel?
@@ -60,7 +60,7 @@ extension DeviceModel {
             name: name,
             model: model,
             osVersion: osVersion,
-            token: token,
+            pushToken: pushToken,
             voipToken: voipToken,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -74,7 +74,7 @@ extension DeviceModel {
         self.name = input.name
         self.model = input.model
         self.osVersion = input.osVersion
-        self.token = input.token
+        self.pushToken = input.pushToken
         self.voipToken = input.voipToken
     }
 

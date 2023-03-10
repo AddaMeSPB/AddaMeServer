@@ -34,12 +34,12 @@ actor WebsocketHandle {
         
         ws.onText { [self] ws, text in
             guard let data = text.data(using: .utf8) else {
-                req.logger.notice("Wrong encoding for received message for connect web socket")
+                req.logger.error("Wrong encoding for received message for connect web socket")
                 return
             }
             
             let string = String(data: data, encoding: .utf8)
-            print(#line, string as Any)
+            req.logger.info("\(#function) \(#line) \(string as Any)")
             
             guard let chatOutGoingEvent = ChatOutGoingEvent.decode(data: data) else {
 
@@ -50,20 +50,27 @@ actor WebsocketHandle {
                 return
             }
 
+            let user = req.payload.user
+            guard let userID = user.id else {
+                req.logger.error("Cant found user from req.payload")
+                return
+            }
+
             switch chatOutGoingEvent {
-            case .connect(let user):
-                let userID = user.id
+            case .connect:
+
                 Task {
                     await wsClients.join(id: userID, on: ws)
                 }
                 req.logger.info("web socker connect for user \(user.email ?? user.fullName ?? "")")
-            case .disconnect(let user):
-                 let userID = user.id
+
+            case .disconnect:
 
                 Task {
                     await wsClients.leave(id: userID)
                 }
                 req.logger.info("web socker remove for user \(user.email ?? user.fullName ?? "")")
+
             case .message(let msg):
 
                 Task {
@@ -77,10 +84,11 @@ actor WebsocketHandle {
                 }
 
                 req.logger.info("conversation conversation: \(lastMessage)")
+
             case .notice(let msg):
-                print(#line, msg)
+                req.logger.info("error: \(msg)")
             case .error(let error):
-                req.logger.info("error: \(error.localizedDescription)")
+                req.logger.error("error: \(error.localizedDescription)")
             }
         }
     }

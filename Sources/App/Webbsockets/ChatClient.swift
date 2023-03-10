@@ -116,7 +116,7 @@ actor WebsocketClients {
                     title: conversation.title,
                     subtitle: msgItem.messageBody
                 ),
-                to: device.token
+                to: device.pushToken
             ).get()
 
         }

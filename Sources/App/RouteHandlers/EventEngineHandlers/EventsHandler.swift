@@ -66,7 +66,7 @@ public func eventsHandler(
         // The equatorial radius of the Earth is
         // approximately 3,963.2 miles or 6,378.1 kilometers.
 
-        debugPrint(page)
+        request.logger.info("\(page)")
         let maxDistanceInMiles = Double(page.distance)
 
         let events = request.mongoDB[HangoutEventModel.schema]

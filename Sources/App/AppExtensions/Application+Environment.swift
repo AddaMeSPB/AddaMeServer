@@ -26,28 +26,28 @@ extension Application {
                 fatalError("\(#line) No MongoDB connection string is available in .env.development")
             }
             connectionString = mongoURL
-            print("\(#line) mongoURL: \(connectionString)")
+            self.logger.info("\(#line) mongoURL: \(connectionString)")
 
         case .staging:
             guard let mongoURL = Environment.get("MONGO_DB_\(environmentNameUppercased)_URL") else {
                 fatalError("\(#line) No MongoDB connection string is available in .env.development")
             }
             connectionString = mongoURL
-            print("\(#line) mongoURL: \(connectionString)")
+            self.logger.info("\(#line) mongoURL: \(connectionString)")
 
         case .testing:
             guard let mongoURL = Environment.get("MONGO_DB_\(environmentNameUppercased)_URL") else {
                 fatalError("\(#line) No MongoDB connection string is available in .env.development")
             }
             connectionString = mongoURL
-            print("\(#line) mongoURL: \(connectionString)")
+            self.logger.info("\(#line) mongoURL: \(connectionString)")
 
         default:
             guard let mongoURL = Environment.get("MONGO_DB_\(environmentNameUppercased)_URL") else {
                 fatalError("No MongoDB connection string is available in .env.development")
             }
             connectionString = mongoURL
-            print("\(#line) mongoURL: \(connectionString)")
+            self.logger.info("\(#line) mongoURL: \(connectionString)")
         }
     }
 

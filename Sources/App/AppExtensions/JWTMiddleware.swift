@@ -48,7 +48,7 @@ public final class JWTMiddleware: AsyncMiddleware {
             } catch let JWTError.claimVerificationFailure(name: name, reason: reason) {
                 throw JWTError.claimVerificationFailure(name: name, reason: reason)
             } catch let error {
-                debugPrint("\(self) \(#line) \(#file) \(error)")
+                req.logger.info("\(self) \(#line) \(#file) \(error)")
                 if req.accessToken == "" {
                     return try await next.respond(to: req)
                 }
@@ -60,7 +60,7 @@ public final class JWTMiddleware: AsyncMiddleware {
             return try await next.respond(to: req)
 
         } else {
-            req.application.logger.notice("Unauthorized missing token \(req.url.path) \(String(describing: req.body.string))")
+            req.logger.error("Unauthorized missing token \(req.url.path) \(String(describing: req.body.string))")
             return Response(status: .unauthorized, body: .init(string: "Missing authorization bearer header"))
         }
     }
