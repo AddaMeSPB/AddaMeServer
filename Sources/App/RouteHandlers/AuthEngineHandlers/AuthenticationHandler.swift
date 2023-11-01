@@ -19,66 +19,47 @@ public func authenticationHandler(
         }
 
         let email = input.email.lowercased()
-        let code = String.randomDigits(ofLength: 6)
-        let message = "\(code)"
 
-        switch request.application.environment {
-        case .production:
+        let randomDigits = request.application.environment 
+            == .development || request.application.environment
+            == .testing ? "336699" : String.randomDigits(ofLength: 6)
 
-            try await request
-                .emailVerifier
-                .verifyOTPEmail(for: email, msg: message)
+        let otp = "\(randomDigits)"
+        let minutes = 5.0
+        let expiresAt = Date().addingTimeInterval(minutes * 60.0)
 
-            let smsAttempt = VerificationCodeAttempt(
-                email: email,
-                code: code,
-                expiresAt: Date().addingTimeInterval(5.0 * 60.0)
-            )
+        let otpEmail = OTPEmail(
+          templateName: "addame_otp",
+          name: "Hello",
+          bodyWithOtp: otp,
+          duration: "\(minutes)",
+          subject: "Your Adda2 OTP Verification Code."
+        )
 
-            _ = try await smsAttempt.save(on: request.db).get()
-            let attemptId = try! smsAttempt.requireID()
-            return EmailLoginOutput(
-                email: email,
-                attemptId: attemptId
-            )
+        let smsAttempt = VerificationCodeAttempt(
+            email: email,
+            code: otp,
+            expiresAt: expiresAt
+        )
 
-        case .development:
+        _ = try await smsAttempt.save(on: request.db).get()
+        let attemptId = try! smsAttempt.requireID()
 
-            let code = "336699"
-//            try await request
-//                .emailVerifier
-//                .verifyOTPEmail(for: input.email, msg: code)
 
-            let smsAttempt = VerificationCodeAttempt(
-                email: email,
-                code: code,
-                expiresAt: Date().addingTimeInterval(5.0 * 60.0)
-            )
-            _ = try await smsAttempt.save(on: request.db).get()
-
-            let attemptId = try! smsAttempt.requireID()
-            return EmailLoginOutput(
-                email: email,
-                attemptId: attemptId
-            )
-
-        default:
-
-            let code = "336699"
-
-            let smsAttempt = VerificationCodeAttempt(
-                email: email,
-                code: code,
-                expiresAt: Date().addingTimeInterval(5.0 * 60.0)
-            )
-            _ = try await smsAttempt.save(on: request.db).get()
-
-            let attemptId = try! smsAttempt.requireID()
-            return EmailLoginOutput(
-                email: email,
-                attemptId: attemptId
-            )
+        let emailPayload = EmailPayload(otpEmail, to: email)
+        let task = EmailJobMongoQueue(payload: emailPayload, vCodeAttempt: smsAttempt)
+        
+        do {
+            try await request.mongoQueue.queueTask(task)
+        } catch {
+            request.logger.info("\(error)")
         }
+
+        return EmailLoginOutput(
+            email: email,
+            attemptId: attemptId
+        )
+
 
     case .verifyEmail(let input):
 

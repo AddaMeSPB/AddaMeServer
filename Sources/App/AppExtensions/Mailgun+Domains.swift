@@ -3,7 +3,9 @@ import Vapor
 
 extension MailgunDomain {
     static var sandbox: MailgunDomain {
-      .init( Environment.get("MAILGUN_DOMAIN") ?? "", .us)
+      .init( "sandbox85d89c55d2ae4a3b8aaeca56b3a025c5.mailgun.org", .us)
     }
-    static var productoin: MailgunDomain { .init("word.justcal.me", .eu)}
+    
+    static var production: MailgunDomain { .init("addame.com", .eu)}
 }
+

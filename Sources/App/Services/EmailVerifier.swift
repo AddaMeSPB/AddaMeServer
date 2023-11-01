@@ -28,7 +28,7 @@ struct EmailVerifier {
 
         var verificationEmail = VerificationEmail.init(verifyUrl: msg)
         verificationEmail.subject = "Addame2 Verification Code"
-        verificationEmail.templateName = "email_otp_verification_addame_server"
+        verificationEmail.templateName = "addame_otp"
 
         try await self.queue.dispatch(
             EmailJob.self,

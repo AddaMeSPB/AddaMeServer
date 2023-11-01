@@ -59,10 +59,12 @@ public func configure(_ app: Application) async throws {
 
     // MARK: Mailgun
     app.mailgun.configuration = .environment
-    app.mailgun.defaultDomain = .productoin
+    app.mailgun.defaultDomain = .production
 
     // MARK: Queues
-    try queues(app)
+    // MARK: MongoQueues
+    app.initializeMongoQueue()
+    try mongoQueue(app)
 
     // MARK: Services
     app.randomGenerators.use(.random)
