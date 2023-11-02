@@ -27,7 +27,7 @@ let package = Package(
         .package(url: "https://github.com/vapor-community/mailgun.git", from: "5.0.0"),
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "App",
             dependencies: [
                 .product(name: "Vapor", package: "vapor"),
@@ -42,13 +42,8 @@ let package = Package(
                 .product(name: "QueuesRedisDriver", package: "queues-redis-driver"),
                 .product(name: "Mailgun", package: "mailgun"),
                 .product(name: "VaporRouting", package: "vapor-routing")
-            ],
-            swiftSettings: [
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
             ]
         ),
-
-        .executableTarget(name: "Main", dependencies: [.target(name: "App")]),
         .testTarget(name: "AppTests", dependencies: [
             .target(name: "App"),
             .product(name: "XCTVapor", package: "vapor"),
