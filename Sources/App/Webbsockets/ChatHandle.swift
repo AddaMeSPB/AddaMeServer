@@ -19,76 +19,71 @@ actor WebsocketHandle {
     }
 
     func connectionHandler(ws: WebSocket, req: Request) {
-        
-        ws.onPong { ws in
-            ws.onText { (ws, text) in
-                print(#line, text)
-            }
-        }
-        
+
 //        ws.onPing { ws in
 //            ws.onText { (ws, text) in
 //                print(#line, text)
 //            }
 //        }
-        
-        ws.onText { [self] ws, text in
-            guard let data = text.data(using: .utf8) else {
-                req.logger.error("Wrong encoding for received message for connect web socket")
-                return
-            }
-            
-            let string = String(data: data, encoding: .utf8)
-            req.logger.info("\(#function) \(#line) \(string as Any)")
-            
-            guard let chatOutGoingEvent = ChatOutGoingEvent.decode(data: data) else {
-
-                req.logger.notice("unacceptableData for connect web socket")
-                Task {
-                  try await ws.close(code: .unacceptableData)
+        req.eventLoop.execute {
+            ws.onText { [self] ws, text in
+                guard let data = text.data(using: .utf8) else {
+                    req.logger.error("Wrong encoding for received message for connect web socket")
+                    return
                 }
-                return
-            }
-
-            let user = req.payload.user
-            guard let userID = user.id else {
-                req.logger.error("Cant found user from req.payload")
-                return
-            }
-
-            switch chatOutGoingEvent {
-            case .connect:
-
-                Task {
-                    await wsClients.join(id: userID, on: ws)
+                
+                let string = String(data: data, encoding: .utf8)
+                req.logger.info("\(#function) \(#line) \(string as Any)")
+                
+                guard let chatOutGoingEvent = ChatOutGoingEvent.decode(data: data) else {
+                    
+                    req.logger.notice("unacceptableData for connect web socket")
+                    Task {
+                        try await ws.close(code: .unacceptableData)
+                    }
+                    return
                 }
-                req.logger.info("web socker connect for user \(user.email ?? user.fullName ?? "")")
-
-            case .disconnect:
-
-                Task {
-                    await wsClients.leave(id: userID)
+                
+                let user = req.payload.user
+                guard let userID = user.id else {
+                    req.logger.error("Cant found user from req.payload")
+                    return
                 }
-                req.logger.info("web socker remove for user \(user.email ?? user.fullName ?? "")")
-
-            case .message(let msg):
-
-                Task {
-                    try await wsClients.send(msg: msg, req: req)
+                
+                switch chatOutGoingEvent {
+                    case .connect:
+                        
+                        Task {
+                            await wsClients.join(id: userID, on: ws)
+                        }
+                        req.logger.info("web socker connect for user \(user.email ?? user.fullName ?? "")")
+                        
+                    case .disconnect:
+                        
+                        Task {
+                            await wsClients.leave(id: userID)
+                        }
+                        req.logger.info("web socker remove for user \(user.email ?? user.fullName ?? "")")
+                        
+                    case .message(let msg):
+                        
+                        Task {
+                            try await wsClients.send(msg: msg, req: req)
+                        }
+                        
+                    case .conversation(let lastMessage):
+                        
+                        Task {
+                            try await wsClients.send(msg: lastMessage, req: req)
+                        }
+                        
+                        req.logger.info("conversation conversation: \(lastMessage)")
+                        
+                    case .notice(let msg):
+                        req.logger.info("error: \(msg)")
+                    case .error(let error):
+                        req.logger.error("error: \(error.localizedDescription)")
                 }
-
-            case .conversation(let lastMessage):
-
-                Task {
-                    try await wsClients.send(msg: lastMessage, req: req)
-                }
-
-                req.logger.info("conversation conversation: \(lastMessage)")
-
-            case .notice(let msg):
-                req.logger.info("error: \(msg)")
-            case .error(let error):
-                req.logger.error("error: \(error.localizedDescription)")
             }
         }
     }

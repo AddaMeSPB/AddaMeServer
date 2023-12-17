@@ -103,22 +103,3 @@ public func configure(_ app: Application) async throws {
     app.mount(app.router, use: siteHandler)
     
 }
-
-
-extension Application {
-    private static let runQueue = DispatchQueue(label: "Run")
-
-    /// We need to avoid blocking the main thread, so spin this off to a separate queue
-    public func customRun() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            Self.runQueue.async { [self] in
-                do {
-                    try run()
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-}

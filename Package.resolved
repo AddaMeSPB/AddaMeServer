@@ -6,7 +6,7 @@
       "location" : "https://github.com/AddaMeSPB/AddaSharedModels.git",
       "state" : {
         "branch" : "CleanUpBackEndModel",
-        "revision" : "b8d3d7af1b7baf18c89329f01d933c378820b22c"
+        "revision" : "6b3a0d5b7a5c5918ad4eee5aaa1e826fe5e6c0c8"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/console-kit.git",
       "state" : {
-        "revision" : "ccd0773b3ad3c67a19918aaef6903678592bb087",
-        "version" : "4.9.0"
+        "revision" : "7d0898ed481e1855ec549924ab701bdc6f754b18",
+        "version" : "4.10.2"
       }
     },
     {
@@ -203,8 +203,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-server/RediStack.git",
       "state" : {
-        "revision" : "30a43b019569625d2d9972c4fe89e06dbdc09e64",
-        "version" : "1.5.1"
+        "revision" : "a476f69cbbe31de5ba040309630d365d13c687f8",
+        "version" : "1.6.1"
       }
     },
     {
@@ -212,8 +212,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/routing-kit.git",
       "state" : {
-        "revision" : "88077f2c9d12777dcc89562fa581888ff7ba14ae",
-        "version" : "4.8.1"
+        "revision" : "17a7a3facce8285fd257aa7c72d5e480351e7698",
+        "version" : "4.8.2"
       }
     },
     {
@@ -230,8 +230,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-algorithms.git",
       "state" : {
-        "revision" : "bcd4f369ac962bc3e5244c9df778739f8f5bdbf1",
-        "version" : "1.1.0"
+        "revision" : "f6919dfc309e7f1b56224378b11e28bab5bccc42",
+        "version" : "1.2.0"
       }
     },
     {
@@ -248,8 +248,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-case-paths",
       "state" : {
-        "revision" : "5da6989aae464f324eef5c5b52bdb7974725ab81",
-        "version" : "1.0.0"
+        "revision" : "ed7facdd4a361514b46e3bbc6238cd41c84be4ec",
+        "version" : "1.1.1"
       }
     },
     {
@@ -302,8 +302,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio.git",
       "state" : {
-        "revision" : "853522d90871b4b63262843196685795b5008c46",
-        "version" : "2.61.1"
+        "revision" : "702cd7c56d5d44eeba73fdf83918339b26dc855c",
+        "version" : "2.62.0"
       }
     },
     {
@@ -361,6 +361,15 @@
       }
     },
     {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-syntax.git",
+      "state" : {
+        "revision" : "6ad4ea24b01559dde0773e3d091f1b9e36175036",
+        "version" : "509.0.2"
+      }
+    },
+    {
       "identity" : "swift-url-routing",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-url-routing.git",
@@ -374,8 +383,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/vapor.git",
       "state" : {
-        "revision" : "3bf4e73955d029743c233f127f4259a101a764f5",
-        "version" : "4.85.0"
+        "revision" : "d682e05fdb64c9f7da01af096a73cd11bb7ab755",
+        "version" : "4.86.2"
       }
     },
     {
