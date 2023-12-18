@@ -40,7 +40,7 @@ struct EmailJobMongoQueue: RecurringTask {
         do {
            _ = try await context.mailgun().send(mailgunMessage).get()
         } catch {
-            print(error)
+            print("EmailJobMongoQueue ExecutionContext: \(error)")
         }
     }
 
@@ -53,7 +53,7 @@ struct EmailJobMongoQueue: RecurringTask {
     // If we failed to run the job for whatever reason (SMTP issue, database issue or otherwise)
     func onExecutionFailure(failureContext: QueuedTaskFailure<ExecutionContext>) async throws -> TaskExecutionFailureAction {
         // Retry in 1 hour, `nil` for maxAttempts means we never stop retrying
-        print(failureContext.error)
+        print("QueuedTaskFailure: \(failureContext.error)")
         return .retryAfter(3600, maxAttempts: nil)
     }
 }

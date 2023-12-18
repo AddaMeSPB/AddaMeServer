@@ -1,12 +1,14 @@
 version: '3.9'
 
 x-shared_environment: &shared_environment
-  LOG_LEVEL: ${LOG_LEVEL:-debug}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   JWTS: "${JWTS}"
-  MONGO_DB_PRODUCTION_URL: '${MONGO_DB_PRODUCTION_URL}'
+  MONGO_DB_PRODUCTION_URL: "${MONGO_DB_PRODUCTION_URL}"
+
   TWILIO_ACCOUNT_ID: "${TWILIO_ACCOUNT_ID}"
   TWILIO_ACCOUNT_SECRET: "${TWILIO_ACCOUNT_SECRET}"
   SENDER_NUMBER: "+16097579519"
+
   APNS_KEY_ID: "${APNS_KEY_ID}"
   APNS_PRIVATE_KEY: "${APNS_PRIVATE_KEY}"
   APNS_TEAM_ID: "${APNS_TEAM_ID}"
@@ -15,28 +17,27 @@ x-shared_environment: &shared_environment
   REDIS_URL_PRODUCTION: '${REDIS_URL_PRODUCTION}'
 
 services:
-    mongo:
-     image: mongo:latest
-     container_name: AddameProduction
-     environment:
-       - AUTH=yes
-       - MONGODB_ADMIN_USER='${MONGODB_ADMIN_USER}'
-       - MONGODB_ADMIN_PASS='${MONGODB_ADMIN_PASS}'
-       - MONGO_INITDB_ROOT_USERNAME='${MONGODB_USER_PRODUCTION}'
-       - MONGO_INITDB_ROOT_PASSWORD='${MONGODB_PASS_PRODUCTION}'
-       - MONGO_INITDB_DATABASE='${MONGODB_DATABASE_PRODUCTION}'
-     volumes:
-       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-       - ./mongodb/data:/data/db
-     networks:
-       - production_gateway
-     restart: unless-stopped
-     ports:
-      - "27018:27017"
+  mongo:
+    image: mongo:latest
+    container_name: AddameMongoPro
+    environment:
+      - AUTH=yes
+      - MONGODB_ADMIN_USER='${MONGODB_ADMIN_USER}'
+      - MONGODB_ADMIN_PASS='${MONGODB_ADMIN_PASS}'
+      - MONGO_INITDB_ROOT_USERNAME='${MONGODB_USER_PRODUCTION}'
+      - MONGO_INITDB_ROOT_PASSWORD='${MONGODB_PASS_PRODUCTION}'
+      - MONGO_INITDB_DATABASE='${MONGODB_DATABASE_PRODUCTION}'
+
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongodb/data:/data/db
+    networks:
+      - addame_pro_gateway
+    restart: unless-stopped
 
   addame_server:
     image: addamespb/addame_server:latest
-    container_name: agateway
+    container_name: addameServer
     build:
       context: addameServer
     environment:
@@ -44,14 +45,19 @@ services:
     ports:
       - '80:8080'
       - '443:8080'
+      - '8080:8080'
     command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
     volumes:
       - ~/addameServer:/addameServer_data
       - ./.env:/app/.env
       - ./.env.production:/app/.env.production
+    depends_on:
+      - mongo
     networks:
-      - production_gateway
+      - addame_pro_gateway
     restart: unless-stopped
+    env_file:
+      - ./.env
 
   redis:
     container_name: redisProAddame
@@ -63,12 +69,12 @@ services:
     volumes:
       - redis-persistence-production:/bitnami/redis/data
     networks:
-      - production_gateway
+      - addame_pro_gateway
 
 volumes:
   addameServer:
   redis-persistence-production:
 
 networks:
-  production_gateway:
+  addame_pro_gateway:
     name: Default

@@ -43,7 +43,10 @@ public func authenticationHandler(
         )
 
         _ = try await smsAttempt.save(on: request.db).get()
-        let attemptId = try! smsAttempt.requireID()
+        //let attemptId = try! smsAttempt.requireID()
+        guard let attemptId = smsAttempt.id else {
+            throw Abort(.internalServerError, reason: "Failed to retrieve attempt ID after saving.")
+        }
 
 
         let emailPayload = EmailPayload(otpEmail, to: email)
@@ -51,8 +54,9 @@ public func authenticationHandler(
         
         do {
             try await request.mongoQueue.queueTask(task)
+            request.logger.info("create queueTask success")
         } catch {
-            request.logger.info("\(error)")
+            request.logger.error("create queueTask: \(error)")
         }
 
         return EmailLoginOutput(
