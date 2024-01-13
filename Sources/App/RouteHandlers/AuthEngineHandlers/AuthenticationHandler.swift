@@ -48,7 +48,6 @@ public func authenticationHandler(
             throw Abort(.internalServerError, reason: "Failed to retrieve attempt ID after saving.")
         }
 
-
         let emailPayload = EmailPayload(otpEmail, to: email)
         let task = EmailJobMongoQueue(payload: emailPayload, vCodeAttempt: smsAttempt)
         

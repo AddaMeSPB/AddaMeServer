@@ -17,9 +17,9 @@ x-shared_environment: &shared_environment
   REDIS_URL_PRODUCTION: '${REDIS_URL_PRODUCTION}'
 
 services:
-  mongo:
+  addame_mongo:
     image: mongo:latest
-    container_name: AddameMongoPro
+    container_name: addameMongoPro
     environment:
       - AUTH=yes
       - MONGODB_ADMIN_USER='${MONGODB_ADMIN_USER}'
@@ -52,24 +52,12 @@ services:
       - ./.env:/app/.env
       - ./.env.production:/app/.env.production
     depends_on:
-      - mongo
+      - addame_mongo
     networks:
       - addame_pro_gateway
     restart: unless-stopped
     env_file:
       - ./.env
-
-  redis:
-    container_name: redisProAddame
-    image: 'bitnami/redis:5.0'
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    restart: unless-stopped
-    volumes:
-      - redis-persistence-production:/bitnami/redis/data
-    networks:
-      - addame_pro_gateway
 
 volumes:
   addameServer:

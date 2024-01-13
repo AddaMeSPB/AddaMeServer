@@ -54,11 +54,14 @@ actor WebsocketClients {
 
         } catch {
             messageCreate.isDelivered = false
+            print("Send Msg to User: \(senderID) error: \(error)")
+            throw Abort(.notFound, reason: "Send Msg to User: \(senderID) error: \(error)")
         }
 
     }
 
-    @Sendable func send(message: MessageModel, req: Request, socket: WebSocket) async throws {
+    @Sendable 
+    func send(message: MessageModel, req: Request, socket: WebSocket) async throws {
         if !req.loggedIn {
             logger.error("\(#line) Unauthorized send message")
             throw Abort(.unauthorized)
@@ -80,7 +83,8 @@ actor WebsocketClients {
             .get()
     }
 
-    @Sendable private func sendNotificationToConversationMembers(
+    @Sendable 
+    private func sendNotificationToConversationMembers(
         msgItem: MessageItem,
         senderID: ObjectId,
         with req: Request
@@ -108,7 +112,8 @@ actor WebsocketClients {
                 .get()
 
             else {
-                throw Abort(.notFound, reason: "User not found from \(#function)")
+                continue
+//                throw Abort(.notFound, reason: "User not found from \(#function)")
             }
 
             try await req.apns.send(
