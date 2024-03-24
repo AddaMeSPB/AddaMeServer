@@ -37,16 +37,14 @@ services:
 
   addame_server:
     image: addamespb/addame_server:latest
-    container_name: addameServer
+    container_name: addame_server
     build:
       context: addameServer
     environment:
       <<: *shared_environment
     ports:
-      - '80:8080'
-      - '443:8080'
-      - '8080:8080'
-    command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8080"]
+      - '8010:8010'
+    command: ["serve", "--env", "production", "--hostname", "0.0.0.0", "--port", "8010"]
     volumes:
       - ~/addameServer:/addameServer_data
       - ./.env:/app/.env
@@ -58,6 +56,19 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+
+  addame_nginx:
+    image: nginx:latest
+    container_name: addame_nginx_rp
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      - addame_server
+    networks:
+      - addame_pro_gateway
 
 volumes:
   addameServer:
